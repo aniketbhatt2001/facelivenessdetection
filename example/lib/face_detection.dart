@@ -92,7 +92,7 @@ class __FaceDetectorState extends State<_FaceDetector> {
                   ]
                 ],
               ),
-          onRulesetCompleted: (ruleset) {
+          onRulesetCompleted: (ruleset, controller) {
             if (!_completedRuleset.contains(ruleset)) {
               _completedRuleset.add(ruleset);
             }

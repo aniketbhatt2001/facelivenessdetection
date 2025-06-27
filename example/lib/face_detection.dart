@@ -38,8 +38,7 @@ class __FaceDetectorState extends State<_FaceDetector> {
           child: ({required countdown, required state, required hasFace}) =>
               Column(
                 children: [
-                  Text(
-                      'dkjsad klsal jdkksja dslakd sakdsa dlksa dsajkldsakljds akdklsjad sakljdsa dslad sajkld sakljdsa ldksak ldjska ldkljsa dsakld jsads'),
+                  Text('please center your face'),
                   const SizedBox(height: 20),
                   Row(
                       spacing: 10,

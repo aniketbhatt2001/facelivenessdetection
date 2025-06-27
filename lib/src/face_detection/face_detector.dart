@@ -14,7 +14,8 @@ class FaceDetectorView extends StatefulWidget {
   final int pauseDurationInSeconds;
   final Size cameraSize;
   final Function(bool validated)? onSuccessValidation;
-  final void Function(Rulesets ruleset)? onRulesetCompleted;
+  final void Function(Rulesets ruleset, CameraController? controller)?
+      onRulesetCompleted;
   final List<Rulesets> ruleset;
   final Color activeProgressColor;
   final Color progressColor;
@@ -266,12 +267,12 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
       dev.log(rotX.toString(), name: 'Head Movement');
       if (rotX < -20) {
         // Adjust threshold if needed
-        widget.onRulesetCompleted?.call(Rulesets.tiltUp);
+        widget.onRulesetCompleted?.call(Rulesets.tiltUp, controller);
         return true;
       }
     } else {
       if (rotX > 20) {
-        widget.onRulesetCompleted?.call(Rulesets.tiltUp);
+        widget.onRulesetCompleted?.call(Rulesets.tiltUp, controller);
         return true;
       }
     }
@@ -294,12 +295,12 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
 
     if (left) {
       if (adjustedRotY < -40) {
-        widget.onRulesetCompleted?.call(Rulesets.toLeft);
+        widget.onRulesetCompleted?.call(Rulesets.toLeft, controller);
         return true;
       }
     } else {
       if (adjustedRotY > 40) {
-        widget.onRulesetCompleted?.call(Rulesets.toRight);
+        widget.onRulesetCompleted?.call(Rulesets.toRight, controller);
         return true;
       }
     }
@@ -313,7 +314,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
     if (leftEyeOpenProb != null && rightEyeOpenProb != null) {
       if (leftEyeOpenProb < eyeOpenThreshold &&
           rightEyeOpenProb < eyeOpenThreshold) {
-        widget.onRulesetCompleted?.call(Rulesets.blink);
+        widget.onRulesetCompleted?.call(Rulesets.blink, controller);
         return true;
       }
     }
@@ -344,7 +345,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
       _smileStreak++;
       if (_smileStreak >= _smileFramesNeeded) {
         _smileStreak = 0;
-        widget.onRulesetCompleted?.call(Rulesets.smiling);
+        widget.onRulesetCompleted?.call(Rulesets.smiling, controller);
         return true;
       }
     } else {

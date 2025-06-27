@@ -74,6 +74,9 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
   Debouncer? _debouncer;
   CameraController? controller;
   bool hasFace = false;
+  static const double _smileThreshold = 0.7; // stricter threshold
+  static const int _smileFramesNeeded = 3; // require N consecutive frames
+  int _smileStreak = 0;
   @override
   void dispose() {
     _canProcess = false;
@@ -317,15 +320,35 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
     return false;
   }
 
+  // bool _onSmilingDetected(Face face) {
+  //   if (face.smilingProbability != null) {
+  //     final double? smileProb = face.smilingProbability;
+  //     if ((smileProb ?? 0) > .5) {
+  //       if (widget.onRulesetCompleted != null) {
+  //         widget.onRulesetCompleted!(Rulesets.smiling);
+  //         return true;
+  //       }
+  //     }
+  //   }
+  //   return false;
+  // }
   bool _onSmilingDetected(Face face) {
-    if (face.smilingProbability != null) {
-      final double? smileProb = face.smilingProbability;
-      if ((smileProb ?? 0) > .5) {
-        if (widget.onRulesetCompleted != null) {
-          widget.onRulesetCompleted!(Rulesets.smiling);
-          return true;
-        }
+    final double prob = face.smilingProbability ?? 0;
+
+    // Only consider smile valid if mouth is clearly visible
+    final mouthVisible = face.landmarks[FaceLandmarkType.leftMouth] != null &&
+        face.landmarks[FaceLandmarkType.rightMouth] != null &&
+        face.landmarks[FaceLandmarkType.bottomMouth] != null;
+
+    if (prob > _smileThreshold && mouthVisible) {
+      _smileStreak++;
+      if (_smileStreak >= _smileFramesNeeded) {
+        _smileStreak = 0;
+        widget.onRulesetCompleted?.call(Rulesets.smiling);
+        return true;
       }
+    } else {
+      _smileStreak = 0;
     }
     return false;
   }

@@ -1,5 +1,7 @@
 import 'dart:developer' as dev;
+import 'dart:developer';
 import 'dart:io';
+
 import 'package:camera/camera.dart';
 import 'package:facelivenessdetection/src/debouncer/debouncer.dart';
 import 'package:facelivenessdetection/src/detector_view/detector_view.dart';
@@ -13,18 +15,19 @@ import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 class FaceDetectorView extends StatefulWidget {
   final int pauseDurationInSeconds;
   final Size cameraSize;
-  final Function(bool validated)? onSuccessValidation;
+  final Function(bool validated, CameraController? controller)?
+      onSuccessValidation;
   final void Function(Rulesets ruleset, CameraController? controller)?
       onRulesetCompleted;
   final List<Rulesets> ruleset;
   final Color activeProgressColor;
   final Color progressColor;
-
   final Widget Function(
       {required Rulesets state,
       required int countdown,
       required bool hasFace}) child;
-  final Widget Function(CameraController? controller) onValidationDone;
+  final Widget Function(CameraController? controller, int? trackingId)
+      onValidationDone;
   final int totalDots;
   final double dotRadius;
   final Color? backgroundColor;
@@ -58,6 +61,7 @@ class FaceDetectorView extends StatefulWidget {
 }
 
 class _FaceDetectorViewState extends State<FaceDetectorView> {
+  int? trackingId;
   ValueNotifier<List<Rulesets>> ruleset = ValueNotifier<List<Rulesets>>([]);
   final FaceDetector _faceDetector = FaceDetector(
     options: FaceDetectorOptions(
@@ -75,8 +79,8 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
   Debouncer? _debouncer;
   CameraController? controller;
   bool hasFace = false;
-  static const double _smileThreshold = 0.7; // stricter threshold
-  static const int _smileFramesNeeded = 3; // require N consecutive frames
+  static const double _smileThreshold = 0.8; // stricter threshold
+  static const int _smileFramesNeeded = 1; // require N consecutive frames
   int _smileStreak = 0;
   @override
   void dispose() {
@@ -110,79 +114,91 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
             padding: widget.contextPadding ??
                 EdgeInsets.symmetric(horizontal: 22, vertical: 16),
             width: double.infinity,
-            child: Column(mainAxisSize: MainAxisSize.max, children: [
-              ValueListenableBuilder(
-                  valueListenable: _currentTest,
-                  builder: (context, state, child) {
-                    double targetProgress = state != null
-                        ? (widget.ruleset.indexOf(state) /
-                                widget.ruleset.length)
-                            .toDouble()
-                        : 1.0;
-                    return TweenAnimationBuilder(
-                        duration:
-                            Duration(milliseconds: 500), // Animation speed
-                        tween: Tween<double>(begin: 0, end: targetProgress),
-                        builder: (context, animation, _) => CustomPaint(
-                            painter: DottedCirclePainter(
-                                activeProgressColor: widget.activeProgressColor,
-                                progressColor: widget.progressColor,
-                                progress: animation,
-                                totalDots: widget.totalDots,
-                                dotRadius: widget.dotRadius),
-                            child: child));
-                  },
-                  child: Container(
-                      height: widget.cameraSize.height,
-                      width: widget.cameraSize.width,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                      ),
-                      child: DetectorView(
-                          cameraSize: widget.cameraSize,
-                          onController: (controller_) =>
-                              controller = controller_,
-                          title: 'Face Detector',
-                          text: _text,
-                          onImage: _processImage,
-                          initialCameraLensDirection: _cameraLensDirection))),
-              SizedBox(height: 5),
-              ValueListenableBuilder<Rulesets?>(
-                  valueListenable: _currentTest,
-                  builder: (context, state, child) {
-                    if (state != null) {
-                      return widget.child(
-                          state: state,
-                          countdown: _debouncer!.timeLeft,
-                          hasFace: hasFace);
-                    }
-                    return SizedBox.shrink();
-                  }),
-              AnimatedBuilder(
-                  animation: Listenable.merge([_currentTest, ruleset]),
-                  builder: (context, child) {
-                    if (_currentTest.value == null &&
-                        ruleset.value.isEmpty &&
-                        controller != null) {
-                      return Expanded(
-                          child: SizedBox(
+            child: Column(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ValueListenableBuilder(
+                      valueListenable: _currentTest,
+                      builder: (context, state, child) {
+                        double targetProgress = state != null
+                            ? (widget.ruleset.indexOf(state) /
+                                    widget.ruleset.length)
+                                .toDouble()
+                            : 1.0;
+                        return TweenAnimationBuilder(
+                            duration:
+                                Duration(milliseconds: 500), // Animation speed
+                            tween: Tween<double>(begin: 0, end: targetProgress),
+                            builder: (context, animation, _) => CustomPaint(
+                                painter: DottedCirclePainter(
+                                    activeProgressColor:
+                                        widget.activeProgressColor,
+                                    progressColor: widget.progressColor,
+                                    progress: animation,
+                                    totalDots: widget.totalDots,
+                                    dotRadius: widget.dotRadius),
+                                child: child));
+                      },
+                      child: Container(
+                          height: widget.cameraSize.height,
+                          width: widget.cameraSize.width,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                          ),
+                          child: DetectorView(
+                              cameraSize: widget.cameraSize,
+                              onController: (controller_) =>
+                                  controller = controller_,
+                              title: 'Face Detector',
+                              text: _text,
+                              onImage: _processImage,
+                              initialCameraLensDirection:
+                                  _cameraLensDirection))),
+                  Spacer(),
+                  ValueListenableBuilder<Rulesets?>(
+                      valueListenable: _currentTest,
+                      builder: (context, state, child) {
+                        if (state != null) {
+                          return widget.child(
+                              state: state,
+                              countdown: _debouncer!.timeLeft,
+                              hasFace: hasFace);
+                        }
+                        return SizedBox.shrink();
+                      }),
+                  SizedBox(
+                    height: 18,
+                  ),
+                  AnimatedBuilder(
+                      animation: Listenable.merge([_currentTest, ruleset]),
+                      builder: (context, child) {
+                        if (_currentTest.value == null &&
+                            ruleset.value.isEmpty &&
+                            controller != null) {
+                          return SizedBox(
                               width: double.infinity,
-                              child: widget.onValidationDone(controller)));
-                    } else {
-                      return SizedBox.shrink();
-                    }
-                  })
-            ])));
+                              child: widget.onValidationDone(
+                                  controller, trackingId));
+                        } else {
+                          return SizedBox.shrink();
+                        }
+                      })
+                ])));
   }
 
   Future<void> _processImage(InputImage inputImage) async {
     if (!_canProcess) return;
     if (_isBusy) return;
     _isBusy = true;
+
     setState(() {
       _text = '';
     });
+
     final faces = await _faceDetector.processImage(inputImage);
+    //if (faces.length > 1) return;
+
     hasFace = faces.isNotEmpty;
     if (!(_debouncer?.isRunning ?? false)) handleRuleSet(faces);
     if (inputImage.metadata?.size != null &&
@@ -209,10 +225,10 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
 
   startRandomizedTime(Face face) {
     if (ruleset.value.isEmpty) {
-      widget.onSuccessValidation?.call(true);
+      widget.onSuccessValidation?.call(true, controller);
       return;
     } else {
-      widget.onSuccessValidation?.call(false);
+      widget.onSuccessValidation?.call(false, controller);
     }
 
     var currentRuleset = ruleset.value.removeAt(0);
@@ -335,17 +351,21 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
   // }
   bool _onSmilingDetected(Face face) {
     final double prob = face.smilingProbability ?? 0;
-
+    log('smile prob ${face.smilingProbability}');
     // Only consider smile valid if mouth is clearly visible
     final mouthVisible = face.landmarks[FaceLandmarkType.leftMouth] != null &&
         face.landmarks[FaceLandmarkType.rightMouth] != null &&
         face.landmarks[FaceLandmarkType.bottomMouth] != null;
 
-    if (prob > _smileThreshold && mouthVisible) {
+    if (prob >= _smileThreshold && mouthVisible) {
       _smileStreak++;
       if (_smileStreak >= _smileFramesNeeded) {
         _smileStreak = 0;
-        widget.onRulesetCompleted?.call(Rulesets.smiling, controller);
+        widget.onRulesetCompleted?.call(
+          Rulesets.smiling,
+          controller,
+        );
+        trackingId = face.trackingId;
         return true;
       }
     } else {

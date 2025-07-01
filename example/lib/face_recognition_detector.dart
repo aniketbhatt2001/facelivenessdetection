@@ -29,7 +29,10 @@ class _FaceRecognitionDetectorState extends State<FaceRecognitionDetector> {
         backgroundColor: Theme.of(context).colorScheme.background,
         pauseDurationInSeconds: 2,
         cameraSize: Size(250, 250),
-        onSuccessValidation: (validated, controller) {
+        onSuccessValidation: (
+          validated,
+          controller,
+        ) {
           log('onSuccessValidation called');
         },
         ruleset: [Rulesets.blink],
@@ -53,7 +56,11 @@ class _FaceRecognitionDetectorState extends State<FaceRecognitionDetector> {
               },
               child: Text('Done'));
         },
-        child: ({required countdown, required state, required hasFace}) =>
+        child: (
+                {required countdown,
+                required state,
+                required hasFace,
+                required multipleFacesFound}) =>
             Column(
           children: [
             SizedBox(

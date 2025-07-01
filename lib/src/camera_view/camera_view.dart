@@ -160,7 +160,9 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   }
 
   Future _stopLiveFeed() async {
-    await _controller?.stopImageStream();
+   if (_controller?.value.isStreamingImages ?? false) {
+                        await _controller?.stopImageStream();
+                      }
     await _controller?.dispose();
     _controller = null;
   }

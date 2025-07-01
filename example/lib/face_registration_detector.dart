@@ -1,4 +1,6 @@
 import 'package:example/attendance_screen.dart';
+import 'package:example/attendance_service.dart';
+import 'package:example/id_generator.dart';
 import 'package:facelivenessdetection/facelivenessdetection.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -14,14 +16,18 @@ class FaceRegistrationDetector extends StatefulWidget {
 class _FaceRegistrationDetectorState extends State<FaceRegistrationDetector> {
   final List<Rulesets> _completedRuleset = [];
   final TextStyle _textStyle = const TextStyle();
-
+  final attendanceService = AttendanceService();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       // appBar: AppBar(),
       body: SafeArea(
         child: FaceDetectorView(
-            //   ruleset: [Rulesets.smiling],
+            onSuccessValidation: (
+              validated,
+              controller,
+            ) {},
+            ruleset: [Rulesets.blink],
             dotRadius: 2.5,
             totalDots: 70,
             activeProgressColor: Colors.green,
@@ -32,39 +38,60 @@ class _FaceRegistrationDetectorState extends State<FaceRegistrationDetector> {
             cameraSize: Size(250, 250),
             onValidationDone: (controller, trackingId) {
               return ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pushReplacement(MaterialPageRoute(
-                      builder: (context) => AttendanceScreen(),
-                    ));
+                  onPressed: () async {
+                    try {
+                      if (controller?.value.isStreamingImages ?? false) {
+                        await controller?.stopImageStream();
+                      }
+                      final res = await attendanceService.registerEmployee(
+                          employeeId: generateTimeBasedRandomNumber()
+                              .toStringAsExponential(),
+                          name: 'Aniket');
+                      Navigator.of(context).pushReplacement(MaterialPageRoute(
+                        builder: (context) => AttendanceScreen(),
+                      ));
+                    } catch (e) {
+                      print('erroror....................$e');
+                    }
                   },
                   child: Text('Next'));
             },
-            child: ({required countdown, required state, required hasFace}) =>
+            child: (
+                    {required countdown,
+                    required state,
+                    required hasFace,
+                    required multipleFacesFound}) =>
                 Column(
                   children: [
+                    multipleFacesFound
+                        ? Text('Multiple faced found !!!!!!!!!')
+                        : SizedBox(),
                     SizedBox(
                       height: 20,
                     ),
-                    hasFace ? Text('Please center your face') : SizedBox(),
+                    // hasFace ? Text('Please center your face') : SizedBox(),
                     const SizedBox(height: 20),
-                    Row(
-                        spacing: 10,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Flexible(
-                              child: AnimatedSize(
-                                  duration: const Duration(milliseconds: 150),
-                                  child: Text(
-                                    hasFace
-                                        ? 'User face found'
-                                        : 'User face not found',
-                                    style: _textStyle.copyWith(
-                                        //  color: Colors.black,
-                                        fontWeight: FontWeight.w400,
-                                        fontSize: 12),
-                                  )))
-                        ]),
+                    multipleFacesFound
+                        ? SizedBox()
+                        : Row(
+                            spacing: 10,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                                Flexible(
+                                    child: AnimatedSize(
+                                        duration:
+                                            const Duration(milliseconds: 150),
+                                        child: Text(
+                                          hasFace
+                                              ? 'User face found'
+                                              : 'User face not found',
+                                          style: _textStyle.copyWith(
+                                              //  color: Colors.black,
+                                              fontWeight: FontWeight.w400,
+                                              fontSize: 12),
+                                        )))
+                              ]),
                     const SizedBox(height: 30),
                     Text(getHintText(state),
                         style: _textStyle.copyWith(

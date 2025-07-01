@@ -38,6 +38,7 @@ dependencies:
     path: C:/Users/Admin/facelivenessdetection
   table_calendar: ^3.2.0
   cloud_firestore: ^5.6.9
+  firebase_core: ^3.14.0
 
 dev_dependencies:
   flutter_test:

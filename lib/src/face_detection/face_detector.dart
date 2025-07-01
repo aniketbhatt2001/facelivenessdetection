@@ -15,8 +15,10 @@ import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 class FaceDetectorView extends StatefulWidget {
   final int pauseDurationInSeconds;
   final Size cameraSize;
-  final Function(bool validated, CameraController? controller)?
-      onSuccessValidation;
+  final Function(
+    bool validated,
+    CameraController? controller,
+  )? onSuccessValidation;
   final void Function(Rulesets ruleset, CameraController? controller)?
       onRulesetCompleted;
   final List<Rulesets> ruleset;
@@ -25,13 +27,15 @@ class FaceDetectorView extends StatefulWidget {
   final Widget Function(
       {required Rulesets state,
       required int countdown,
-      required bool hasFace}) child;
+      required bool hasFace,
+      required bool multipleFacesFound}) child;
   final Widget Function(CameraController? controller, int? trackingId)
       onValidationDone;
   final int totalDots;
   final double dotRadius;
   final Color? backgroundColor;
   final EdgeInsetsGeometry? contextPadding;
+
   const FaceDetectorView(
       {super.key,
       required this.onRulesetCompleted,
@@ -82,6 +86,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
   static const double _smileThreshold = 0.8; // stricter threshold
   static const int _smileFramesNeeded = 1; // require N consecutive frames
   int _smileStreak = 0;
+  bool multipleFacesFound = false;
   @override
   void dispose() {
     _canProcess = false;
@@ -163,7 +168,8 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
                           return widget.child(
                               state: state,
                               countdown: _debouncer!.timeLeft,
-                              hasFace: hasFace);
+                              hasFace: hasFace,
+                              multipleFacesFound: multipleFacesFound);
                         }
                         return SizedBox.shrink();
                       }),
@@ -197,8 +203,12 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
     });
 
     final faces = await _faceDetector.processImage(inputImage);
-    //if (faces.length > 1) return;
-
+    // if (faces.length > 1) return;
+    if (faces.length > 1) {
+      multipleFacesFound = true;
+    } else {
+      multipleFacesFound = false;
+    }
     hasFace = faces.isNotEmpty;
     if (!(_debouncer?.isRunning ?? false)) handleRuleSet(faces);
     if (inputImage.metadata?.size != null &&
@@ -217,7 +227,8 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
   }
 
   void handleRuleSet(List<Face> faces) {
-    if (faces.isEmpty) return;
+    if (faces.isEmpty || multipleFacesFound) return;
+
     for (Face face in faces) {
       startRandomizedTime(face);
     }
@@ -225,10 +236,16 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
 
   startRandomizedTime(Face face) {
     if (ruleset.value.isEmpty) {
-      widget.onSuccessValidation?.call(true, controller);
+      widget.onSuccessValidation?.call(
+        true,
+        controller,
+      );
       return;
     } else {
-      widget.onSuccessValidation?.call(false, controller);
+      widget.onSuccessValidation?.call(
+        false,
+        controller,
+      );
     }
 
     var currentRuleset = ruleset.value.removeAt(0);

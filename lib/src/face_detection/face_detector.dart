@@ -69,9 +69,9 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
   ValueNotifier<List<Rulesets>> ruleset = ValueNotifier<List<Rulesets>>([]);
   final FaceDetector _faceDetector = FaceDetector(
     options: FaceDetectorOptions(
-        enableContours: true,
+        enableContours: false,
         enableLandmarks: true,
-        enableTracking: true,
+        enableTracking: false,
         performanceMode: FaceDetectorMode.accurate,
         enableClassification: true),
   );
@@ -83,10 +83,8 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
   Debouncer? _debouncer;
   CameraController? controller;
   bool hasFace = false;
-  static const double _smileThreshold = 0.8; // stricter threshold
-  static const int _smileFramesNeeded = 1; // require N consecutive frames
-  int _smileStreak = 0;
   bool multipleFacesFound = false;
+  List<String> _eyeStates = [];
   @override
   void dispose() {
     _canProcess = false;
@@ -341,18 +339,57 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
   }
 
   bool _onBlinkDetected(Face face) {
-    final double? leftEyeOpenProb = face.leftEyeOpenProbability;
-    final double? rightEyeOpenProb = face.rightEyeOpenProbability;
-    const double eyeOpenThreshold = 0.6;
-    if (leftEyeOpenProb != null && rightEyeOpenProb != null) {
-      if (leftEyeOpenProb < eyeOpenThreshold &&
-          rightEyeOpenProb < eyeOpenThreshold) {
-        widget.onRulesetCompleted?.call(Rulesets.blink, controller);
-        return true;
-      }
+    final double? left = face.leftEyeOpenProbability;
+    final double? right = face.rightEyeOpenProbability;
+
+    if (left == null || right == null) return false;
+
+    const double openThreshold = 0.6;
+    const double closedThreshold = 0.4;
+
+    final isOpen = left > openThreshold && right > openThreshold;
+    final isClosed = left < closedThreshold && right < closedThreshold;
+
+    String currentState = isClosed
+        ? 'closed'
+        : isOpen
+            ? 'open'
+            : 'unknown';
+
+    if (currentState == 'unknown') return false;
+
+    // Add to history
+    _eyeStates.add(currentState);
+
+    if (_eyeStates.length > 3) _eyeStates.removeAt(0);
+    log('_eyeStates $_eyeStates');
+    // Check for blink pattern: open → closed → open
+    if (_eyeStates.length == 3 &&
+        _eyeStates[0] == 'open' &&
+        _eyeStates[1] == 'closed' &&
+        _eyeStates[2] == 'open') {
+      _eyeStates.clear(); // reset to avoid duplicate blink detection
+      widget.onRulesetCompleted?.call(Rulesets.blink, controller);
+
+      return true;
     }
+
     return false;
   }
+
+  // bool _onBlinkDetectedd(Face face) {
+  //   final double? leftEyeOpenProb = face.leftEyeOpenProbability;
+  //   final double? rightEyeOpenProb = face.rightEyeOpenProbability;
+  //   const double eyeOpenThreshold = 0.6;
+  //   if (leftEyeOpenProb != null && rightEyeOpenProb != null) {
+  //     if (leftEyeOpenProb < eyeOpenThreshold &&
+  //         rightEyeOpenProb < eyeOpenThreshold) {
+  //       widget.onRulesetCompleted?.call(Rulesets.blink, controller);
+  //       return true;
+  //     }
+  //   }
+  //   return false;
+  // }
 
   // bool _onSmilingDetected(Face face) {
   //   if (face.smilingProbability != null) {
@@ -366,7 +403,9 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
   //   }
   //   return false;
   // }
+
   bool _onSmilingDetected(Face face) {
+    const double _smileThreshold = 0.8;
     final double prob = face.smilingProbability ?? 0;
     log('smile prob ${face.smilingProbability}');
     // Only consider smile valid if mouth is clearly visible
@@ -375,18 +414,12 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
         face.landmarks[FaceLandmarkType.bottomMouth] != null;
 
     if (prob >= _smileThreshold && mouthVisible) {
-      _smileStreak++;
-      if (_smileStreak >= _smileFramesNeeded) {
-        _smileStreak = 0;
-        widget.onRulesetCompleted?.call(
-          Rulesets.smiling,
-          controller,
-        );
-        trackingId = face.trackingId;
-        return true;
-      }
-    } else {
-      _smileStreak = 0;
+      widget.onRulesetCompleted?.call(
+        Rulesets.smiling,
+        controller,
+      );
+      trackingId = face.trackingId;
+      return true;
     }
     return false;
   }

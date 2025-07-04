@@ -1,8 +1,10 @@
-import 'package:example/face_registration_detector.dart';
+import 'package:example/views/dashboard.dart';
+import 'package:example/views/face_recognizer.dart';
+import 'package:example/views/face_registration.dart';
 import 'package:flutter/material.dart';
 
-class RegisterFaceScreen extends StatelessWidget {
-  const RegisterFaceScreen({super.key});
+class StartRegistrationScreen extends StatelessWidget {
+  const StartRegistrationScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +68,21 @@ class RegisterFaceScreen extends StatelessWidget {
                     ));
                   },
                   child: const Text('Start Registration'),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => DashboardView(),
+                    ));
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => FaceRecognitionDetector(),
+                    ));
+                  },
+                  child: const Text('Mark Attendance'),
                 ),
               ),
             ],

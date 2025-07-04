@@ -94,7 +94,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   Future _startLiveFeed() async {
     try {
       final camera = _cameras[_cameraIndex];
-      _controller = CameraController(camera, ResolutionPreset.high,
+      _controller = CameraController(camera, ResolutionPreset.veryHigh,
           enableAudio: false,
           imageFormatGroup: Platform.isAndroid
               ? ImageFormatGroup.nv21
@@ -160,9 +160,9 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   }
 
   Future _stopLiveFeed() async {
-   if (_controller?.value.isStreamingImages ?? false) {
-                        await _controller?.stopImageStream();
-                      }
+    if (_controller?.value.isStreamingImages ?? false) {
+      await _controller?.stopImageStream();
+    }
     await _controller?.dispose();
     _controller = null;
   }
@@ -191,7 +191,9 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     // } else if (Platform.isAndroid) {
     var rotationCompensation =
         _orientations[_controller!.value.deviceOrientation];
+
     if (rotationCompensation == null) return null;
+
     if (camera.lensDirection == CameraLensDirection.front) {
       rotationCompensation = (sensorOrientation + rotationCompensation) % 360;
     } else {

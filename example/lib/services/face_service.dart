@@ -27,6 +27,11 @@ class FaceService {
       } else {
         throw Exception(body['message']);
       }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 409) {
+        throw Exception(e.response?.data['detail'] ?? 'Unknown error occured');
+      }
+      rethrow;
     } catch (e) {
       rethrow;
     }

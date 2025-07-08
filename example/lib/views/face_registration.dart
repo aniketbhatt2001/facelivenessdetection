@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:example/views/dashboard.dart';
@@ -62,11 +61,15 @@ class _FaceRegistrationDetectorState extends State<FaceRegistrationDetector> {
                 ),
               );
 
-              Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(
-                    builder: (context) => DashboardView(),
-                  ),
-                  (_) => false);
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              } else {
+                Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(
+                      builder: (context) => DashboardView(),
+                    ),
+                    (_) => false);
+              }
             } else if (state is FaceRegistrationFailed) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -127,7 +130,7 @@ class _FaceRegistrationDetectorState extends State<FaceRegistrationDetector> {
                                     ? null
                                     : () async {
                                         keyboardNode.unfocus();
-                                        controller?.stopImageStream();
+
                                         context
                                             .read<FaceRegistrationCubit>()
                                             .register(
@@ -210,6 +213,7 @@ class _FaceRegistrationDetectorState extends State<FaceRegistrationDetector> {
                   onRulesetCompleted: (ruleset, controller) async {
                     if (!_completedRuleset.contains(ruleset)) {
                       _completedRuleset.add(ruleset);
+                      controller?.pausePreview();
                       final image = await controller?.takePicture();
                       if (image != null) {
                         setState(() {

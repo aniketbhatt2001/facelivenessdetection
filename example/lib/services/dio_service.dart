@@ -13,8 +13,8 @@ class DioService {
     _dio = Dio(
       BaseOptions(
         baseUrl: 'http://34.47.177.112:8002',
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 10),
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
         // ⚠️  Do NOT hard-set contentType here; let each request decide
       ),
     );

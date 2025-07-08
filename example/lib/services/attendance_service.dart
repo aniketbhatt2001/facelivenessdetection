@@ -1,17 +1,19 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:example/controllers/employee/employee_attendance_cubit.dart';
 import 'package:intl/intl.dart';
 
 class EmployeeService {
   EmployeeService._();
 
   static final _firestore = FirebaseFirestore.instance;
-
+  static int? _qdrantId;
   static final StreamController<int> _qdrantIdController =
       StreamController<int>.broadcast();
 
-  static Stream<int> get qdrantIdStream => _qdrantIdController.stream;
+  static Stream<int> get qdrantIdStream =>
+      _qdrantIdController.stream.onlyDuplicates();
 
   static StreamSink<int> get _sink => _qdrantIdController.sink;
 
@@ -35,6 +37,7 @@ class EmployeeService {
           'registrationDate': FieldValue.serverTimestamp(),
           'qdrantId': qdrantId
         });
+        _qdrantId ??= int.tryParse(qdrantId);
         _sink.add(int.parse(qdrantId));
         return true;
       }
@@ -47,6 +50,7 @@ class EmployeeService {
     required String qdrantId,
   }) async {
     try {
+      if (_qdrantId != null && _qdrantId.toString() != qdrantId) return;
       final docId = '$qdrantId';
 
       final date = DateTime.now();
@@ -84,7 +88,7 @@ class EmployeeService {
           'checkOut': false,
         });
       }
-
+      _qdrantId ??= int.tryParse(qdrantId);
       _sink.add(int.parse(qdrantId));
     } catch (e) {
       print(e);

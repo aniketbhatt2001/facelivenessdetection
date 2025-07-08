@@ -1,6 +1,4 @@
 import 'package:example/app_colors.dart';
-import 'package:example/services/face_service.dart';
-import 'package:example/views/face_registration.dart';
 import 'package:example/registration.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';

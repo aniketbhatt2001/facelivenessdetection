@@ -1,3 +1,4 @@
+import 'package:example/controllers/attendanceHistoryList/attendance_history_list_cubit.dart';
 import 'package:example/controllers/employee/employee_attendance_cubit.dart';
 import 'package:example/registration.dart';
 
@@ -33,22 +34,28 @@ class _DashboardViewState extends State<DashboardView> {
 
     return PopScope(
       canPop: false,
-      child: BlocProvider(
-        create: (context) => EmployeeAttendanceCubit(),
-        lazy: false,
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            lazy: true,
+            create: (context) => EmployeeAttendanceCubit(),
+          ),
+          BlocProvider(
+            lazy: true,
+            create: (context) => AttendanceHistoryListCubit(),
+          ),
+        ],
         child: Scaffold(
           backgroundColor: cs.background,
           appBar: AppBar(
             actions: [
               IconButton(
                   onPressed: () {
-
                     Navigator.of(context).pushAndRemoveUntil(
                         MaterialPageRoute(
                           builder: (context) => StartRegistrationScreen(),
                         ),
                         (_) => false);
-                        
                   },
                   icon: Icon(Icons.logout))
             ],

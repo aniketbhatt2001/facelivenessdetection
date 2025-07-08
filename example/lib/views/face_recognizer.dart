@@ -129,20 +129,12 @@ class _FaceRecognitionDetectorState extends State<FaceRecognitionDetector> {
                             onPressed: state is FaceRecognitionInProgress
                                 ? null
                                 : () async {
-                                    try {
-                                      await controller?.stopImageStream();
-                                        context
-                                            .read<FaceRecognitionCubit>()
-                                            .recognize(
-                                              images: images,
-                                            );
-                                    } catch (e) {
-                                      log('error $e');
-                                    } finally {
-                                      if (mounted) {
-                                      
-                                      }
-                                    }
+                                    ;
+                                    context
+                                        .read<FaceRecognitionCubit>()
+                                        .recognize(
+                                          images: images,
+                                        );
                                   },
                             child: state is FaceRecognitionInProgress
                                 ? CupertinoActivityIndicator()
@@ -211,7 +203,9 @@ class _FaceRecognitionDetectorState extends State<FaceRecognitionDetector> {
                   onRulesetCompleted: (ruleset, controller) async {
                     if (!_completedRuleset.contains(ruleset)) {
                       _completedRuleset.add(ruleset);
+                      await controller?.pausePreview();
                       final image = await controller?.takePicture();
+
                       if (image != null) {
                         setState(() {
                           images.add(File(image.path));

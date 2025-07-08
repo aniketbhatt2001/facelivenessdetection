@@ -13,4 +13,8 @@ final class AttendanceHistoryLoaded extends AttendanceHistoryListState {
   AttendanceHistoryLoaded(this.attenadanceHistory);
 }
 
-final class AttendanceHistoryErrorLoading extends AttendanceHistoryListState {}
+final class AttendanceHistoryErrorLoading extends AttendanceHistoryListState {
+  final String error;
+
+  AttendanceHistoryErrorLoading(this.error);
+}

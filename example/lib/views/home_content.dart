@@ -20,90 +20,95 @@ class _HomeContentState extends State<HomeContent> {
     final mq = MediaQuery.of(context);
     final vPad = mq.size.height * 0.02;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Today',
-          style: TextStyle(
-            color: cs.onBackground,
-            fontSize: 22,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 12),
-        const SizedBox(height: 24),
-        Text(
-          'Attendance',
-          style: TextStyle(
-            color: cs.onBackground,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 12),
-        BlocBuilder<EmployeeAttendanceCubit, EmployeeAttendanceState>(
-          builder: (context, state) {
-            if (state is EmployeeAttendanceLoaded &&
-                state.currentDate != null) {
-              final currentData = state.currentDate;
-              final checkInTime = currentData!['checkIn']
-                  ? formatTimestamp(currentData['checkInTime'])
-                  : '';
-              final checkOuTime = currentData['checkOut']
-                  ? formatTimestamp(currentData['checkOutTime'])
-                  : '';
-              return Column(
-                children: [
-                  currentData['checkIn']
-                      ? _buildRecordRow(checkInTime, 'Entry', cs)
-                      : SizedBox(),
-                  const SizedBox(height: 16),
-                  currentData['checkOut']
-                      ? _buildRecordRow(checkOuTime, 'Exit', cs)
-                      : SizedBox(),
-                ],
-              );
-            }
-            return SizedBox();
-          },
-        ),
-        const SizedBox(height: 24),
-        BlocBuilder<EmployeeAttendanceCubit, EmployeeAttendanceState>(
-            builder: (context, state) {
-          return SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: cs.primary,
-                foregroundColor: cs.onPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              onPressed: (state is EmployeeAttendanceLoaded &&
-                      state.currentDate != null &&
-                      state.currentDate!['checkOut'] == true)
-                  ? null
-                  : () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => const FaceRecognitionDetector(),
-                      ));
-                    },
-              child: const Text(
-                'Mark Attendance',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+    return Builder(builder: (context) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Today',
+            style: TextStyle(
+              color: cs.onBackground,
+              fontSize: 22,
+              fontWeight: FontWeight.w600,
             ),
-          );
-        }),
-        SizedBox(height: vPad),
-      ],
-    );
+          ),
+          const SizedBox(height: 12),
+          const SizedBox(height: 24),
+          Text(
+            'Attendance',
+            style: TextStyle(
+              color: cs.onBackground,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 12),
+          BlocBuilder<EmployeeAttendanceCubit, EmployeeAttendanceState>(
+            builder: (context, state) {
+              if (state is EmployeeAttendanceLoaded &&
+                  state.currentDate != null) {
+                final currentData = state.currentDate;
+                final checkInTime = currentData!['checkIn']
+                    ? formatTimestamp(currentData['checkInTime'])
+                    : '';
+                final checkOuTime = currentData['checkOut']
+                    ? formatTimestamp(currentData['checkOutTime'])
+                    : '';
+                return Column(
+                  children: [
+                    currentData['checkIn']
+                        ? _buildRecordRow(checkInTime, 'Entry', cs)
+                        : SizedBox(),
+                    const SizedBox(height: 16),
+                    currentData['checkOut']
+                        ? _buildRecordRow(checkOuTime, 'Exit', cs)
+                        : SizedBox(),
+                  ],
+                );
+              }
+
+              return SizedBox();
+            },
+          ),
+          const SizedBox(height: 24),
+          BlocBuilder<EmployeeAttendanceCubit, EmployeeAttendanceState>(
+              builder: (context, state) {
+            return SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: cs.primary,
+                  foregroundColor: cs.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed:
+                    // (state is EmployeeAttendanceLoaded &&
+                    //         state.currentDate != null &&
+                    //         state.currentDate!['checkOut'] == true)
+                    //     ? null
+                    //     :
+                    () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => const FaceRecognitionDetector(),
+                  ));
+                },
+                child: const Text(
+                  'Mark Attendance',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            );
+          }),
+          SizedBox(height: vPad),
+        ],
+      );
+    });
   }
 
   Widget _buildRecordRow(String time, String label, ColorScheme colorScheme) {

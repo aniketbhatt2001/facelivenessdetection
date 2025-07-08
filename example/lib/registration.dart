@@ -63,9 +63,11 @@ class StartRegistrationScreen extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => FaceRegistrationDetector(),
-                    ));
+                    Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                          builder: (context) => FaceRegistrationDetector(),
+                        ),
+                        (_) => false);
                   },
                   child: const Text('Start Registration'),
                 ),
@@ -82,7 +84,7 @@ class StartRegistrationScreen extends StatelessWidget {
                       builder: (context) => FaceRecognitionDetector(),
                     ));
                   },
-                  child: const Text('Mark Attendance'),
+                  child: const Text('Start Recognition'),
                 ),
               ),
             ],

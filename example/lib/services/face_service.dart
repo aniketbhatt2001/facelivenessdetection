@@ -6,8 +6,9 @@ import 'package:example/services/dio_service.dart';
 import 'dart:async';
 
 class FaceService {
-  FaceService._();
-
+  // FaceService._();
+  // static final _instance = FaceService._();
+  // factory FaceService() => _instance;
   static final _dioService = DioService();
 
   static Future<Map> registerFace({

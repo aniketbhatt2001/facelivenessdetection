@@ -61,15 +61,11 @@ class _FaceRegistrationDetectorState extends State<FaceRegistrationDetector> {
                 ),
               );
 
-              if (Navigator.of(context).canPop()) {
-                Navigator.of(context).pop();
-              } else {
-                Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(
-                      builder: (context) => DashboardView(),
-                    ),
-                    (_) => false);
-              }
+              Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(
+                    builder: (context) => DashboardView(),
+                  ),
+                  (_) => false);
             } else if (state is FaceRegistrationFailed) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -104,7 +100,7 @@ class _FaceRegistrationDetectorState extends State<FaceRegistrationDetector> {
           builder: (context, state) {
             return SafeArea(
               child: FaceDetectorView(
-                  ruleset: [Rulesets.blink],
+                  ruleset: [Rulesets.smiling],
                   dotRadius: 2.5,
                   totalDots: 70,
                   activeProgressColor: Colors.green,

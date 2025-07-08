@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:bloc/bloc.dart';
+import 'package:example/main.dart';
 import 'package:example/services/attendance_service.dart';
 import 'package:example/services/face_service.dart';
 import 'package:meta/meta.dart';
@@ -19,7 +20,7 @@ class FaceRegistrationCubit extends Cubit<FaceRegistrationState> {
       emit(FaceRegistrationInProgress());
 
       final res = await FaceService.registerFace(images: images, name: name);
-      await EmployeeService.registerEmployee(
+      await getIt.get<AttendanceService>(). registerEmployee(
           qdrantId: res['qdrant_id'].toString(), name: name);
       emit(FaceRegistrationSuccess(registrationData: res));
     } catch (e) {

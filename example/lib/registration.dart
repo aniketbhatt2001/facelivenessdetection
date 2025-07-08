@@ -1,10 +1,39 @@
+import 'dart:developer';
+
+import 'package:example/services/attendance_service.dart';
+import 'package:example/services/dio_service.dart';
+import 'package:example/services/face_service.dart';
 import 'package:example/views/dashboard.dart';
 import 'package:example/views/face_recognizer.dart';
 import 'package:example/views/face_registration.dart';
 import 'package:flutter/material.dart';
 
-class StartRegistrationScreen extends StatelessWidget {
+import 'package:get_it/get_it.dart';
+
+class StartRegistrationScreen extends StatefulWidget {
   const StartRegistrationScreen({super.key});
+
+  @override
+  State<StartRegistrationScreen> createState() =>
+      _StartRegistrationScreenState();
+}
+
+class _StartRegistrationScreenState extends State<StartRegistrationScreen> {
+  final getIt = GetIt.instance;
+
+  void setupDependencies() async {
+    log('setupDependencies..............');
+    await getIt.reset();
+    // getIt.registerSingleton<DioService>(DioService());
+    getIt.registerSingleton<AttendanceService>(AttendanceService());
+    getIt.registerSingleton<FaceService>(FaceService());
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    setupDependencies();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,11 +92,11 @@ class StartRegistrationScreen extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(
-                          builder: (context) => FaceRegistrationDetector(),
-                        ),
-                        (_) => false);
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => FaceRegistrationDetector(),
+                      ),
+                    );
                   },
                   child: const Text('Start Registration'),
                 ),
@@ -78,10 +107,14 @@ class StartRegistrationScreen extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => DashboardView(),
-                    ));
-                    Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => FaceRecognitionDetector(),
+                      builder: (context) => FaceRecognitionDetector(
+                        onRecognized: () {
+                          Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(
+                                  builder: (context) => DashboardView()),
+                              (_) => false);
+                        },
+                      ),
                     ));
                   },
                   child: const Text('Start Recognition'),

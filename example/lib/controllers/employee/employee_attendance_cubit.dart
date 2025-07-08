@@ -1,7 +1,11 @@
 import 'dart:async';
 import 'dart:developer';
 import 'package:bloc/bloc.dart';
+import 'package:example/main.dart';
 import 'package:example/services/attendance_service.dart';
+import 'package:example/services/dio_service.dart';
+import 'package:example/services/face_service.dart';
+import 'package:get_it/get_it.dart';
 
 part 'employee_attendance_state.dart';
 
@@ -11,22 +15,25 @@ class EmployeeAttendanceCubit extends Cubit<EmployeeAttendanceState> {
   late final StreamSubscription<int> _qdrantSub;
 
   EmployeeAttendanceCubit() : super(EmployeeAttendanceInitial()) {
-
-    _qdrantSub = EmployeeService.qdrantIdStream.onlyDuplicates().listen(
+    final sessionQdrantId = getIt.get<AttendanceService>().sessionQdrantId;
+    if (sessionQdrantId != null) {
+      getCurrentDateEmployeeAttendance(sessionQdrantId.toString());
+    }
+    _qdrantSub = getIt.get<AttendanceService>().qdrantIdStream.listen(
       (id) => getCurrentDateEmployeeAttendance(id.toString()),
       onError: (err, stk) {
         emit(EmployeeAttendanceError("Stream error: ${err.toString()}"));
       },
     );
-     
   }
 
   Future<void> getCurrentDateEmployeeAttendance(String qdrantId) async {
     try {
       emit(EmployeeAttendanceLoading());
 
-      final currentDate =
-          await EmployeeService.getCurrentDateEmployeeAttendance(qdrantId);
+      final currentDate = await getIt
+          .get<AttendanceService>()
+          .getCurrentDateEmployeeAttendance(qdrantId);
 
       emit(EmployeeAttendanceLoaded(currentDate: currentDate));
     } catch (error, stack) {
@@ -41,19 +48,7 @@ class EmployeeAttendanceCubit extends Cubit<EmployeeAttendanceState> {
   @override
   Future<void> close() {
     _qdrantSub.cancel();
-    return super.close();
-  }
-}
 
-extension OnlyDuplicates<T> on Stream<T> {
-  Stream<T> onlyDuplicates() async* {
-    T? previous;
-    await for (final value in this) {
-      log('previous ${previous}');
-      if (value == previous || previous == null) {
-        yield value; // emit if same as last
-      }
-      previous ??= value;
-    }
+    return super.close();
   }
 }

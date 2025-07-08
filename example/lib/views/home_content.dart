@@ -84,17 +84,19 @@ class _HomeContentState extends State<HomeContent> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                onPressed:
-                    // (state is EmployeeAttendanceLoaded &&
-                    //         state.currentDate != null &&
-                    //         state.currentDate!['checkOut'] == true)
-                    //     ? null
-                    //     :
-                    () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => const FaceRecognitionDetector(),
-                  ));
-                },
+                onPressed: (state is EmployeeAttendanceLoaded &&
+                        state.currentDate != null &&
+                        state.currentDate!['checkOut'] == true)
+                    ? null
+                    : () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => FaceRecognitionDetector(
+                            onRecognized: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ));
+                      },
                 child: const Text(
                   'Mark Attendance',
                   style: TextStyle(

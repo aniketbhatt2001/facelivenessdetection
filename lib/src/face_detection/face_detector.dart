@@ -72,7 +72,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
         enableContours: false,
         enableLandmarks: true,
         enableTracking: false,
-        performanceMode: FaceDetectorMode.accurate,
+        performanceMode: FaceDetectorMode.fast,
         enableClassification: true),
   );
   bool _canProcess = true;
@@ -338,58 +338,58 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
     return false;
   }
 
-  bool _onBlinkDetected(Face face) {
-    final double? left = face.leftEyeOpenProbability;
-    final double? right = face.rightEyeOpenProbability;
+  // bool _onBlinkDetected(Face face) {
+  //   final double? left = face.leftEyeOpenProbability;
+  //   final double? right = face.rightEyeOpenProbability;
 
-    if (left == null || right == null) return false;
+  //   if (left == null || right == null) return false;
 
-    const double openThreshold = 0.6;
-    const double closedThreshold = 0.4;
+  //   const double openThreshold = 0.6;
+  //   const double closedThreshold = 0.4;
 
-    final isOpen = left > openThreshold && right > openThreshold;
-    final isClosed = left < closedThreshold && right < closedThreshold;
+  //   final isOpen = left > openThreshold && right > openThreshold;
+  //   final isClosed = left < closedThreshold && right < closedThreshold;
 
-    String currentState = isClosed
-        ? 'closed'
-        : isOpen
-            ? 'open'
-            : 'unknown';
+  //   String currentState = isClosed
+  //       ? 'closed'
+  //       : isOpen
+  //           ? 'open'
+  //           : 'unknown';
 
-    if (currentState == 'unknown') return false;
+  //   if (currentState == 'unknown') return false;
 
-    // Add to history
-    _eyeStates.add(currentState);
+  //   // Add to history
+  //   _eyeStates.add(currentState);
 
-    if (_eyeStates.length > 3) _eyeStates.removeAt(0);
-    log('_eyeStates $_eyeStates');
-    // Check for blink pattern: open → closed → open
-    if (_eyeStates.length == 3 &&
-        _eyeStates[0] == 'open' &&
-        _eyeStates[1] == 'closed' &&
-        _eyeStates[2] == 'open') {
-      _eyeStates.clear(); // reset to avoid duplicate blink detection
-      widget.onRulesetCompleted?.call(Rulesets.blink, controller);
+  //   if (_eyeStates.length > 3) _eyeStates.removeAt(0);
+  //   log('_eyeStates $_eyeStates');
+  //   // Check for blink pattern: open → closed → open
+  //   if (_eyeStates.length == 3 &&
+  //       _eyeStates[0] == 'open' &&
+  //       _eyeStates[1] == 'closed' &&
+  //       _eyeStates[2] == 'open') {
+  //     _eyeStates.clear(); // reset to avoid duplicate blink detection
+  //     widget.onRulesetCompleted?.call(Rulesets.blink, controller);
 
-      return true;
-    }
-
-    return false;
-  }
-
-  // bool _onBlinkDetectedd(Face face) {
-  //   final double? leftEyeOpenProb = face.leftEyeOpenProbability;
-  //   final double? rightEyeOpenProb = face.rightEyeOpenProbability;
-  //   const double eyeOpenThreshold = 0.6;
-  //   if (leftEyeOpenProb != null && rightEyeOpenProb != null) {
-  //     if (leftEyeOpenProb < eyeOpenThreshold &&
-  //         rightEyeOpenProb < eyeOpenThreshold) {
-  //       widget.onRulesetCompleted?.call(Rulesets.blink, controller);
-  //       return true;
-  //     }
+  //     return true;
   //   }
+
   //   return false;
   // }
+
+  bool _onBlinkDetected(Face face) {
+    final double? leftEyeOpenProb = face.leftEyeOpenProbability;
+    final double? rightEyeOpenProb = face.rightEyeOpenProbability;
+    const double eyeOpenThreshold = 0.5;
+    if (leftEyeOpenProb != null && rightEyeOpenProb != null) {
+      if (leftEyeOpenProb < eyeOpenThreshold &&
+          rightEyeOpenProb < eyeOpenThreshold) {
+        widget.onRulesetCompleted?.call(Rulesets.blink, controller);
+        return true;
+      }
+    }
+    return false;
+  }
 
   // bool _onSmilingDetected(Face face) {
   //   if (face.smilingProbability != null) {

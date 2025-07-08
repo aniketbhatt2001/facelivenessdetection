@@ -1,5 +1,6 @@
 import 'package:example/controllers/attendanceHistoryList/attendance_history_list_cubit.dart';
 import 'package:example/controllers/employee/employee_attendance_cubit.dart';
+import 'package:example/main.dart';
 import 'package:example/registration.dart';
 
 import 'package:example/views/home_content.dart';
@@ -20,7 +21,7 @@ class _DashboardViewState extends State<DashboardView> {
 
   final List<Widget> _dashBoardOptions = const [
     HomeContent(),
-    HistoryTab(),
+    Text('Attendance History'),
     Text("Employees"),
     Text("Settings"),
   ];
@@ -37,69 +38,69 @@ class _DashboardViewState extends State<DashboardView> {
       child: MultiBlocProvider(
         providers: [
           BlocProvider(
-            lazy: true,
             create: (context) => EmployeeAttendanceCubit(),
           ),
           BlocProvider(
-            lazy: true,
             create: (context) => AttendanceHistoryListCubit(),
           ),
         ],
-        child: Scaffold(
-          backgroundColor: cs.background,
-          appBar: AppBar(
-            actions: [
-              IconButton(
-                  onPressed: () {
-                    Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(
-                          builder: (context) => StartRegistrationScreen(),
-                        ),
-                        (_) => false);
-                  },
-                  icon: Icon(Icons.logout))
-            ],
-            automaticallyImplyLeading: false,
+        child: Builder(builder: (context) {
+          return Scaffold(
             backgroundColor: cs.background,
-            elevation: 0,
-            centerTitle: true,
-            title: const Text('Attendance'),
-          ),
-          bottomNavigationBar: BottomNavigationBar(
-            backgroundColor: cs.surface,
-            type: BottomNavigationBarType.fixed,
-            selectedItemColor: cs.primary,
-            unselectedItemColor: cs.onSurface.withOpacity(0.7),
-            currentIndex: _currentIndex,
-            onTap: (index) => setState(() => _currentIndex = index),
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined),
-                activeIcon: Icon(Icons.home),
-                label: 'Home',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.calendar_month_outlined),
-                activeIcon: Icon(Icons.calendar_month_sharp),
-                label: 'Attendance',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.people_outline),
-                activeIcon: Icon(Icons.people_sharp),
-                label: 'Employees',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.settings_outlined),
-                activeIcon: Icon(Icons.settings_sharp),
-                label: 'Settings',
-              ),
-            ],
-          ),
-          body: Padding(
-            padding: EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
-            child: _dashBoardOptions[_currentIndex],
-          ),
-        ),
+            appBar: AppBar(
+              actions: [
+                IconButton(
+                    onPressed: () {
+                      Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (context) => StartRegistrationScreen(),
+                          ),
+                          (_) => false);
+                    },
+                    icon: Icon(Icons.logout))
+              ],
+              automaticallyImplyLeading: false,
+              backgroundColor: cs.background,
+              elevation: 0,
+              centerTitle: true,
+              title: const Text('Attendance'),
+            ),
+            bottomNavigationBar: BottomNavigationBar(
+              backgroundColor: cs.surface,
+              type: BottomNavigationBarType.fixed,
+              selectedItemColor: cs.primary,
+              unselectedItemColor: cs.onSurface.withOpacity(0.7),
+              currentIndex: _currentIndex,
+              onTap: (index) => setState(() => _currentIndex = index),
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home_outlined),
+                  activeIcon: Icon(Icons.home),
+                  label: 'Home',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.calendar_month_outlined),
+                  activeIcon: Icon(Icons.calendar_month_sharp),
+                  label: 'Attendance',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.people_outline),
+                  activeIcon: Icon(Icons.people_sharp),
+                  label: 'Employees',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.settings_outlined),
+                  activeIcon: Icon(Icons.settings_sharp),
+                  label: 'Settings',
+                ),
+              ],
+            ),
+            body: Padding(
+              padding: EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
+              child: _dashBoardOptions[_currentIndex],
+            ),
+          );
+        }),
       ),
     );
   }

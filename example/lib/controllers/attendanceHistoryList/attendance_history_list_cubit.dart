@@ -9,25 +9,25 @@ part 'attendance_history_list_state.dart';
 class AttendanceHistoryListCubit extends Cubit<AttendanceHistoryListState> {
   late final StreamSubscription<int> _qdrantSub;
   AttendanceHistoryListCubit() : super(AttendanceHistoryListInitial()) {
-    _qdrantSub = EmployeeService.qdrantIdStream.listen(
-      (id) => fetchAttendanceHistory(id.toString()),
-      onError: (err, stk) {
-        emit(AttendanceHistoryErrorLoading("Stream error: ${err.toString()}"));
-      },
-    );
+    // _qdrantSub = AttendanceService.qdrantIdStream.listen(
+    //   (id) => fetchAttendanceHistory(id.toString()),
+    //   onError: (err, stk) {
+    //     emit(AttendanceHistoryErrorLoading("Stream error: ${err.toString()}"));
+    //   },
+    // );
   }
 
   Future<void> fetchAttendanceHistory(String qdrantId) async {
-    try {
-      print('id............. $qdrantId');
-      emit(AttendanceHistoryListLoading());
-      final attendanceList =
-          await EmployeeService.getAttendanceHistory(qdrantId);
-      final groupedData = EmployeeService.groupByMonth(attendanceList);
-      emit(AttendanceHistoryLoaded(groupedData));
-    } catch (e) {
-      emit(AttendanceHistoryErrorLoading(e.toString()));
-    }
+    // try {
+    //   print('id............. $qdrantId');
+    //   emit(AttendanceHistoryListLoading());
+    //   final attendanceList =
+    //       await AttendanceService.getAttendanceHistory(qdrantId);
+    //   final groupedData = AttendanceService.groupByMonth(attendanceList);
+    //   emit(AttendanceHistoryLoaded(groupedData));
+    // } catch (e) {
+    //   emit(AttendanceHistoryErrorLoading(e.toString()));
+    // }
   }
 
   @override

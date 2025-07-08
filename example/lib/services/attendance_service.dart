@@ -1,161 +1,114 @@
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:example/controllers/employee/employee_attendance_cubit.dart';
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 
-class EmployeeService {
-  EmployeeService._();
+class AttendanceService {
+  AttendanceService();
+  //static final _instance = AttendanceService._();
+  //factory AttendanceService() => _instance;
+  void _unlockSession() => sessionQdrantId = null;
 
-  static final _firestore = FirebaseFirestore.instance;
-  static int? _qdrantId;
-  static final StreamController<int> _qdrantIdController =
+  final _firestore = FirebaseFirestore.instance;
+  int? sessionQdrantId;
+  final StreamController<int> _qdrantIdController =
       StreamController<int>.broadcast();
 
-  static Stream<int> get qdrantIdStream =>
-      _qdrantIdController.stream.onlyDuplicates();
+  Stream<int> get qdrantIdStream => _qdrantIdController.stream;
+  StreamSink<int> get _sink => _qdrantIdController.sink;
 
-  static StreamSink<int> get _sink => _qdrantIdController.sink;
-
-  static Future<bool> registerEmployee(
-      {required String qdrantId, required String name}) async {
-    try {
-      final docRef = _firestore.collection('employees').doc(qdrantId);
-
-      final ref =
-          FirebaseFirestore.instance.collection('employees').doc(qdrantId);
-      final snapshot = await ref.get();
-
-      if (snapshot.exists) {
-        print("Document exists.");
-        throw Exception('User already exists');
-      } else {
-        print("Document doesn't exist.");
-        await docRef.set({
-          'name': name,
-          'faceRegistered': true,
-          'registrationDate': FieldValue.serverTimestamp(),
-          'qdrantId': qdrantId
-        });
-        _qdrantId ??= int.tryParse(qdrantId);
-        _sink.add(int.parse(qdrantId));
-        return true;
-      }
-    } catch (e) {
-      rethrow;
+  bool _validateOrSetSession(int qdrantId) {
+    if (sessionQdrantId == null) {
+      sessionQdrantId = qdrantId;
+      return true;
     }
+    return sessionQdrantId == qdrantId;
   }
 
-  static Future<void> markAttendance({
+  Future<bool> registerEmployee({
+    required String qdrantId,
+    required String name,
+  }) async {
+    _unlockSession();
+    final docRef = _firestore.collection('employees').doc(qdrantId);
+    final snapshot = await docRef.get();
+    if (snapshot.exists) {
+      throw Exception('User already exists');
+    }
+    await docRef.set({
+      'name': name,
+      'faceRegistered': true,
+      'registrationDate': FieldValue.serverTimestamp(),
+      'qdrantId': qdrantId,
+    });
+    _sink.add(int.parse(qdrantId));
+    return true;
+  }
+
+  Future<void> markAttendance({
     required String qdrantId,
   }) async {
-    try {
-      if (_qdrantId != null && _qdrantId.toString() != qdrantId) return;
-      final docId = '$qdrantId';
-
-      final date = DateTime.now();
-      final formatedDate = DateFormat('dd-MM-yyyy').format(date);
-
-      final attendanceDocRef = _firestore
-          .collection('employees')
-          .doc(docId)
-          .collection('attendanceData')
-          .doc(formatedDate);
-
-      final snapshot = await attendanceDocRef.get();
-
-      if (snapshot.exists) {
-        final data = snapshot.data()!;
-        final alreadyCheckedIn = data['checkIn'] == true;
-        final alreadyCheckedOut = data['checkOut'] == true;
-
-        if (!alreadyCheckedIn) {
-          await attendanceDocRef.update({
-            'checkIn': true,
-            'checkInTime': FieldValue.serverTimestamp(),
-          });
-        } else if (alreadyCheckedIn && !alreadyCheckedOut) {
-          await attendanceDocRef.update({
-            'checkOut': true,
-            'checkOutTime': FieldValue.serverTimestamp(),
-          });
-        }
-      } else {
-        await attendanceDocRef.set({
-          'qdrantId': qdrantId,
+    if (!_validateOrSetSession(int.parse(qdrantId))) {
+      throw Exception('Session locked to another user');
+    }
+    final date = DateTime.now();
+    final formattedDate = DateFormat('dd-MM-yyyy').format(date);
+    final attendanceDocRef = _firestore
+        .collection('employees')
+        .doc(qdrantId)
+        .collection('attendanceData')
+        .doc(formattedDate);
+    final snapshot = await attendanceDocRef.get();
+    if (snapshot.exists) {
+      final data = snapshot.data()!;
+      final checkedIn = data['checkIn'] == true;
+      final checkedOut = data['checkOut'] == true;
+      if (!checkedIn) {
+        await attendanceDocRef.update({
           'checkIn': true,
           'checkInTime': FieldValue.serverTimestamp(),
-          'checkOut': false,
+        });
+      } else if (checkedIn && !checkedOut) {
+        await attendanceDocRef.update({
+          'checkOut': true,
+          'checkOutTime': FieldValue.serverTimestamp(),
         });
       }
-      _qdrantId ??= int.tryParse(qdrantId);
-      _sink.add(int.parse(qdrantId));
-    } catch (e) {
-      print(e);
-      rethrow;
+    } else {
+      await attendanceDocRef.set({
+        'qdrantId': qdrantId,
+        'checkIn': true,
+        'checkInTime': FieldValue.serverTimestamp(),
+        'checkOut': false,
+      });
     }
+    _sink.add(int.parse(qdrantId));
   }
 
-  static Future<List<Map<String, dynamic>>> getAttendanceHistory(
+  Future<List<Map<String, dynamic>>> getAttendanceHistory(
       String qdrantId) async {
-    try {
-      final query = await _firestore
-          .collection('employees')
-          .doc(qdrantId)
-          .collection('attendanceData')
-          .get();
-
-      final attendanceList =
-          query.docs.map((snapshot) => snapshot.data()).toList();
-
-      return attendanceList;
-    } catch (e) {
-      rethrow;
-    }
+    final query = await _firestore
+        .collection('employees')
+        .doc(qdrantId)
+        .collection('attendanceData')
+        .get();
+    return query.docs.map((d) => d.data()).toList();
   }
 
-  static Future<Map<String, dynamic>?> getCurrentDateEmployeeAttendance(
+  Future<Map<String, dynamic>?> getCurrentDateEmployeeAttendance(
       String qdrantId) async {
-    try {
-      final date = DateTime.now();
-      final formatedDate = DateFormat('dd-MM-yyyy').format(date);
-      final query = _firestore
-          .collection('employees')
-          .doc(qdrantId)
-          .collection('attendanceData')
-          .doc(formatedDate);
-
-      final documentSnapshot = await query.get();
-      final doc = documentSnapshot.data();
-      return doc;
-    } catch (e) {
-      rethrow;
-    }
+    final today = DateFormat('dd-MM-yyyy').format(DateTime.now());
+    final doc = await _firestore
+        .collection('employees')
+        .doc(qdrantId)
+        .collection('attendanceData')
+        .doc(today)
+        .get();
+    return doc.data();
   }
 
-  /// Disposer to close the stream controller
-  static void dispose() {
+  void dispose() {
     _qdrantIdController.close();
-  }
-
-  static Map<String, List<Map<String, dynamic>>> groupByMonth(
-      List<Map<String, dynamic>> attendanceList) {
-    final Map<String, List<Map<String, dynamic>>> grouped = {};
-
-    for (var record in attendanceList) {
-      final checkInTime = (record['checkInTime'] as Timestamp).toDate();
-
-      // Format as 'yyyy-MM'
-      final monthKey =
-          '${checkInTime.year}-${checkInTime.month.toString().padLeft(2, '0')}';
-
-      if (!grouped.containsKey(monthKey)) {
-        grouped[monthKey] = [];
-      }
-
-      grouped[monthKey]!.add(record);
-    }
-
-    return grouped;
+    sessionQdrantId = null;
   }
 }

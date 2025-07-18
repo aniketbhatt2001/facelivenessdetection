@@ -62,4 +62,24 @@ class FaceService {
       rethrow;
     }
   }
+
+  static Future<Map> checkLiveness({
+    required List<File> images,
+  }) async {
+    try {
+      final res = await _dioService.postMultipart(
+        '/check_liveness',
+        files: {'file': images},
+      );
+      final body = res.data as Map;
+
+      if (body['face_state']['liveness_score'] != null) {
+        return body;
+      } else {
+        throw Exception('No face detected');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

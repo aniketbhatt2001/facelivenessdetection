@@ -66,6 +66,7 @@ class _FaceRegistrationDetectorState extends State<FaceRegistrationDetector> {
                     builder: (context) => DashboardView(),
                   ),
                   (_) => false);
+                  
             } else if (state is FaceRegistrationFailed) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -101,7 +102,7 @@ class _FaceRegistrationDetectorState extends State<FaceRegistrationDetector> {
             return SafeArea(
               child: FaceDetectorView(
                   ruleset: [
-                    Rulesets.blink,
+                    // Rulesets.blink,
                     Rulesets.smiling,
                   ],
                   dotRadius: 2.5,
@@ -212,7 +213,7 @@ class _FaceRegistrationDetectorState extends State<FaceRegistrationDetector> {
                   onRulesetCompleted: (ruleset, controller) async {
                     if (!_completedRuleset.contains(ruleset)) {
                       _completedRuleset.add(ruleset);
-                    //  controller?.pausePreview();
+                      //  controller?.pausePreview();
                       final image = await controller?.takePicture();
                       if (image != null) {
                         setState(() {

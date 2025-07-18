@@ -405,7 +405,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
   // }
 
   bool _onSmilingDetected(Face face) {
-    const double _smileThreshold = 0.8;
+    const double _smileThreshold = 0.6;
     final double prob = face.smilingProbability ?? 0;
     log('smile prob ${face.smilingProbability}');
     // Only consider smile valid if mouth is clearly visible

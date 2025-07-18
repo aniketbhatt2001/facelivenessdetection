@@ -1,9 +1,7 @@
 import 'package:example/app_colors.dart';
-import 'package:example/controllers/recognition/face_recognition_cubit.dart';
 import 'package:example/registration.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 
 GetIt getIt = GetIt.instance;

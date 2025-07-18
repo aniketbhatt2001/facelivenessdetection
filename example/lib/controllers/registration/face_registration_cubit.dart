@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:bloc/bloc.dart';
@@ -18,11 +19,17 @@ class FaceRegistrationCubit extends Cubit<FaceRegistrationState> {
         return;
       }
       emit(FaceRegistrationInProgress());
-
-      final res = await FaceService.registerFace(images: images, name: name);
-      await getIt.get<AttendanceService>(). registerEmployee(
-          qdrantId: res['qdrant_id'].toString(), name: name);
-      emit(FaceRegistrationSuccess(registrationData: res));
+      final livenessResult = await FaceService.checkLiveness(images: images);
+      log('livenessResult $livenessResult');
+      if (livenessResult['face_state']['result'].toString().toLowerCase() ==
+          'real') {
+        final res = await FaceService.registerFace(images: images, name: name);
+        await getIt.get<AttendanceService>().registerEmployee(
+            qdrantId: res['qdrant_id'].toString(), name: name);
+        emit(FaceRegistrationSuccess(registrationData: res));
+      } else {
+        emit(FaceRegistrationFailed('Liveness failed'));
+      }
     } catch (e) {
       emit(FaceRegistrationFailed(e.toString()));
     }

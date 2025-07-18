@@ -24,6 +24,11 @@ class DioService {
       InterceptorsWrapper(
         onRequest: (opt, h) {
           print("➡️ ${opt.method} ${opt.uri}");
+          if (opt.path == '/check_liveness') {
+            opt.baseUrl = 'http://85.31.225.239:8080/';
+          } else {
+            opt.baseUrl = 'http://34.47.177.112:8002/';
+          }
           return h.next(opt);
         },
         onResponse: (res, h) {

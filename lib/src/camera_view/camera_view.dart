@@ -231,4 +231,6 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
           bytesPerRow: image.width),
     );
   }
+
+
 }

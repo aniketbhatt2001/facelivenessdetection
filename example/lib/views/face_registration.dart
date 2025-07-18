@@ -100,7 +100,10 @@ class _FaceRegistrationDetectorState extends State<FaceRegistrationDetector> {
           builder: (context, state) {
             return SafeArea(
               child: FaceDetectorView(
-                  ruleset: [Rulesets.smiling],
+                  ruleset: [
+                    Rulesets.blink,
+                    Rulesets.smiling,
+                  ],
                   dotRadius: 2.5,
                   totalDots: 70,
                   activeProgressColor: Colors.green,
@@ -209,7 +212,7 @@ class _FaceRegistrationDetectorState extends State<FaceRegistrationDetector> {
                   onRulesetCompleted: (ruleset, controller) async {
                     if (!_completedRuleset.contains(ruleset)) {
                       _completedRuleset.add(ruleset);
-                      controller?.pausePreview();
+                    //  controller?.pausePreview();
                       final image = await controller?.takePicture();
                       if (image != null) {
                         setState(() {

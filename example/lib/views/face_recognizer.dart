@@ -28,6 +28,7 @@ class _FaceRecognitionDetectorState extends State<FaceRecognitionDetector> {
           body: BlocConsumer<FaceRecognitionCubit, FaceRecognitionState>(
             listener: (context, state) {
               if (state is FaceRecognitionSuccess) {
+               
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Row(
@@ -58,7 +59,10 @@ class _FaceRecognitionDetectorState extends State<FaceRecognitionDetector> {
                   ),
                 );
 
-                widget.onRecognized();
+              widget.onRecognized();
+              
+              
+              
               } else if (state is FaceRecognitionFailed) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -93,7 +97,10 @@ class _FaceRecognitionDetectorState extends State<FaceRecognitionDetector> {
             builder: (context, state) {
               return SafeArea(
                 child: FaceDetectorView(
-                    ruleset: [Rulesets.smiling],
+                    ruleset: [
+                      Rulesets.blink,
+                      Rulesets.smiling,
+                    ],
                     dotRadius: 2.5,
                     totalDots: 70,
                     activeProgressColor: Colors.green,
@@ -182,7 +189,7 @@ class _FaceRecognitionDetectorState extends State<FaceRecognitionDetector> {
                     onRulesetCompleted: (ruleset, controller) async {
                       if (!_completedRuleset.contains(ruleset)) {
                         _completedRuleset.add(ruleset);
-                        await controller?.pausePreview();
+                       // await controller?.pausePreview();
                         final image = await controller?.takePicture();
 
                         if (image != null) {

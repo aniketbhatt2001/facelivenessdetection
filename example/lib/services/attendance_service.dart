@@ -41,7 +41,7 @@ class AttendanceService {
       'registrationDate': FieldValue.serverTimestamp(),
       'qdrantId': qdrantId,
     });
-    _sink.add(int.parse(qdrantId));
+
     return true;
   }
 
